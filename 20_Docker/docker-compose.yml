@@ -1,0 +1,33 @@
+# ==========================================
+# DOCKER-COMPOSE KONFIGURATION FÜR LEXOFFICE-DB
+# ==========================================
+
+services:
+  # Definition des PostgreSQL-Datenbank-Containers
+  postgres:
+    # Verwendet die stabile und schlanke PostgreSQL Version 15 auf Alpine-Basis
+    image: postgres:15-alpine
+    
+    # Fester Name für den Container, damit du ihn im Terminal leicht wiederfindest
+    container_name: postgres_lexoffice
+    
+    # Sorgt dafür, dass sich der Container automatisch neu startet, falls das System neu bootet
+    restart: always
+    
+    # Zugangsdaten und Grundeinstellungen für die Datenbank
+    environment:
+      POSTGRES_USER: postgres          # Der Standard-Benutzername für den Zugriff
+      POSTGRES_PASSWORD: secretpassword # Das Passwort für die Datenbank-Verbindung
+      POSTGRES_DB: lexoffice_db         # Der Name der Datenbank, in die Lexoffice-Daten fließen
+    
+    # Verbindet den internen Datenbank-Port mit deinem System (Standard-Port 5432)
+    ports:
+      - "5432:5432"
+    
+    # Sichert die Daten dauerhaft ab, damit sie beim Herunterfahren des Containers nicht gelöscht werden
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+# Globaler Speicherbereich (Volume), den PostgreSQL für die physische Ablage nutzt
+volumes:
+  pgdata:
