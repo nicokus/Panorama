@@ -6,7 +6,7 @@ import psycopg2
 
 #####↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓#####
 # 1. Excel-Konfiguration einlesen
-df = pd.read_excel("manuelle_steuerung.xlsx", sheet_name="Variable")
+df = pd.read_excel("../../25_Manual_Input_xlsx/manuelle_steuerung.xlsx", sheet_name="Variable")
 config = dict(zip(df['Parameter'], df['Wert']))
 
 # 2. Verbindung zur PostgreSQL-Datenbank herstellen
