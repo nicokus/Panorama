@@ -1,6 +1,24 @@
 import os
 import requests
 import json
+import pandas as pd
+import psycopg2
+
+#####↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓#####
+# 1. Excel-Konfiguration einlesen
+df = pd.read_excel("manuelle_steuerung.xlsx", sheet_name="Variable")
+config = dict(zip(df['Parameter'], df['Wert']))
+
+# 2. Verbindung zur PostgreSQL-Datenbank herstellen
+connection = psycopg2.connect(
+    dbname=config.get('db_name'),
+    user=config.get('db_user'),
+    password=config.get('db_password'),
+    host=config.get('db_host'),
+    port=config.get('db_port')
+)
+cursor = connection.cursor()
+#####↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑#####
 
 # API-Key aus den GitHub Secrets / Umgebungsvariablen laden
 api_key = os.environ.get("LEXOFFICE_API_KEY")
@@ -25,10 +43,20 @@ response = requests.get(url, headers=headers)
 if response.status_code == 200:
     # Antwortdaten als JSON-Struktur einlesen
     data = response.json()
-    
-    # Überprüfen, ob Zahlungen vorhanden sind, und den ersten Datensatz verarbeiten
+
+    #####↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓##### 
+    # Überprüfen, ob Zahlungen vorhanden sind
     if data.get('content'):
-        erster_datensatz = data['content'][0]
+        for datensatz in data['content']:
+            # In PostgreSQL schreiben (Beispiel-Tabelle: payments_data mit JSONB-Spalte)
+            cursor.execute(
+                "INSERT INTO payments_data (data) VALUES (%s);",
+                [json.dumps(datensatz)]
+            )
+        connection.commit()
 else:
     # Bei einem Fehler den Statuscode und die Fehlermeldung verarbeiten
     pass
+
+cursor.close()
+connection.close()
