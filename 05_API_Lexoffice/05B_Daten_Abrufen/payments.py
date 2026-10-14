@@ -18,6 +18,13 @@ connection = psycopg2.connect(
     port=config.get('db_port')
 )
 cursor = connection.cursor()
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS payments_data (
+        id SERIAL PRIMARY KEY,
+        data JSONB
+    );
+""")
+connection.commit()
 #####↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑#####
 
 # API-Key aus den GitHub Secrets / Umgebungsvariablen laden

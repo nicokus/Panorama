@@ -1,3 +1,3 @@
 # Panorama
-Ein Überblick der Kosten und Finanzen basierend auf tatsächlichen Umsätzen
 
+Ein Überblick der Kosten und Finanzen basierend auf tatsächlichen Umsätzen
