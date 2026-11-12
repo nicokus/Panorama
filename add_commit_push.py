@@ -11,6 +11,7 @@ commit_msg = f"Numero {count}"
 
 subprocess.run(["git", "add", "."])
 subprocess.run(["git", "commit", "-m", commit_msg])
+subprocess.run(["git", "pull", "origin", "main", "--rebase"])
 subprocess.run(["git", "push", "origin", "main"])
 
 with open(counter_file, "w") as f:
