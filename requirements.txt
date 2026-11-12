@@ -1,0 +1,7 @@
+# Il file requirements.txt serve a comunicare a Streamlit Cloud 
+# quali librerie esterne deve installare automaticamente 
+# nel suo ambiente cloud per far funzionare l´ applicazione.
+
+
+streamlit
+psycopg2-binary
