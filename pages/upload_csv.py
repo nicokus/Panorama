@@ -1,7 +1,14 @@
 import streamlit as st
 import pandas as pd
 
-st.title("Upload CSV")
+st.markdown(
+    """
+    <div style="border: 2px solid #333; padding: 20px; border-radius: 5px; text-align: center; background-color: #f9f9f9; margin-bottom: 20px;">
+        <h3 style="margin: 0; color: #333;">Upload CSV</h3>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 uploaded_file = st.file_uploader("Carica il tuo file CSV", type=["csv"])
 
