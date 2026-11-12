@@ -10,7 +10,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-uploaded_file = st.file_uploader("Carica il tuo file CSV", type=["csv"])
+uploaded_file = st.file_uploader("neues CSV hochladen", type=["csv"])
 
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
