@@ -1,1 +1,1 @@
-import streamlit as st; st.write("Panorama läuft")
+import streamlit as st; st.write("Panorama läuft fun")
