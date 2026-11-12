@@ -7,7 +7,7 @@ try:
 except (FileNotFoundError, ValueError):
     count = 1
 
-commit_msg = f"conta-numeri {count}"
+commit_msg = f"Numero {count}"
 
 subprocess.run(["git", "add", "."])
 subprocess.run(["git", "commit", "-m", commit_msg])
