@@ -3,12 +3,12 @@ import streamlit as st
 import psycopg2
 
 st.title("Panorama")
-st.write("Panorama läuft xfun")
+st.write("was läuft auf Panorama")
 
 ### CONNECT TO POSTGRE-SQL SU RAILWAY ###
 try:
     conn = psycopg2.connect("postgresql://postgres:foLkCkJTsFCZTqavpMefCAMCBsjgYjkO@switchyard.proxy.rlwy.net:28916/railway")
-    st.success("Connessione al database PostgreSQL su Railway riuscita!")
+    st.success("Verbindung mit dem Database PostgreSQL auf Railway aktiv")
     conn.close()
 except Exception as e:
-    st.error(f"Errore di connessione: {e}")
+    st.error(f"Fehler bei der Verbindung mit dem Database PostgreSQL auf Railway: {e}")
