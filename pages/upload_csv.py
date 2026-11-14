@@ -3,7 +3,7 @@ import pandas as pd
 import hashlib
 import psycopg2
 import os
-
+from database import COLONNE_CONFIG
 
 
 ### INTERFACCIA GRAFICA PER CARICARE IL CSV ###
@@ -16,28 +16,17 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-uploaded_file = st.file_uploader("DATEV-Konformes CSV mit Umsätzen hochladen", type=["csv"])
+uploaded_file = st.file_uploader(
+    "DATEV-Konformes CSV mit Umsätzen hochladen", type=["csv"]
+    )
 
 
-
+colonne_csv = [col['nome'] for col in COLONNE_CONFIG[1:]]
 
 ### TABELLA PER VEDERE ANTEPRIMA DEL CSV ###
 if uploaded_file is not None:
-    # I file bancari senza intestazioni usano solitamente il punto e virgola come separatore e codifiche standard
     df = pd.read_csv(uploaded_file, header=None, sep=';', encoding='latin1', dtype=str)
-    
-    # Assegnazione dei nomi delle colonne dalla A alla AH
-    colonne_csv = [
-        "bic_auftraggeber", "iban_auftraggeber", "reserviert_c", "reserviert_d",
-        "buchungstag", "wertstellung", "betrag", "gegenpartei_name",
-        "reserviert_i", "reserviert_j", "gegenpartei_iban",
-        "verwendungszweck_1", "verwendungszweck_2", "verwendungszweck_3",
-        "verwendungszweck_4", "verwendungszweck_5", "waehrung",
-        "geschaeftsart", "zuordnungsstatus", "extra_t", "extra_u",
-        "extra_v", "extra_w", "extra_x", "extra_y", "extra_z",
-        "extra_aa", "extra_ab", "extra_ac", "extra_ad", "extra_ae",
-        "extra_af", "extra_ag", "extra_ah"
-    ]
+
     
     if df.shape[1] >= len(colonne_csv):
         df = df.iloc[:, :len(colonne_csv)]
@@ -75,74 +64,32 @@ if uploaded_file is not None:
             
             df['codice_univoco'] = df.apply(calcola_hash, axis=1)
             
+            nomi_colonne = [col["nome"] for col in COLONNE_CONFIG]
+            colonne_insert_sql = ", ".join(nomi_colonne)
+            placeholders_sql = ", ".join(["%s"] * len(COLONNE_CONFIG))
+
+            insert_query = f"""
+                INSERT INTO bank_transaktionen ({colonne_insert_sql})
+                VALUES ({placeholders_sql})
+                ON CONFLICT (unique_id) DO NOTHING;
+            """
+
             inseriti = 0
             duplicati = 0
 
             for _, row in df.iterrows():
-                # Gestione duplicati tramite ON CONFLICT (codice_univoco) DO NOTHING nella query SQL
+                valori = tuple(row.get(col["nome"]) for col in COLONNE_CONFIG)
+                cur.execute(insert_query, valori)
                 if cur.rowcount > 0:
                     inseriti += 1
                 else:
                     duplicati += 1
 
-            
-            
-            
-            
-            
-            # Iterazione e inserimento riga per riga con clausola ON CONFLICT DO NOTHING
-            for _, row in df.iterrows():
-                query = """
-                    INSERT INTO bank_transaktionen (
-                        codice_univoco, bic_auftraggeber, iban_auftraggeber, reserviert_c, reserviert_d,
-                        buchungstag, wertstellung, betrag, gegenpartei_name,
-                        reserviert_i, reserviert_j, gegenpartei_iban,
-                        verwendungszweck_1,wendungszweck_2, verwendungszweck_3,
-                        verwendungszweck_4, verwendungszweck_5, waehrung,
-                        geschaeftsart, zuordnungsstatus, extra_t, extra_u,
-                        extra_v, extra_w, extra_x, extra_y, extra_z,
-                        extra_aa, extra_ab, extra_ac, extra_ad, extra_ae,
-                        extra_af, extra_ag, extra_ah
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    ON CONFLICT (codice_univoco) DO NOTHING;
-                """
-                
-                valori = (
-                    row['codice_univoco'], row['bic_auftraggeber'], row['iban_auftraggeber'], row['reserviert_c'], row['reserviert_d'],
-                    row['buchungstag'], row['wertstellung'], row['betrag'], row['gegenpartei_name'],
-                    row['reserviert_i'], row['reserviert_j'], row['gegenpartei_iban'],
-                    row['verwendungszweck_1'], row['verwendungszweck_2'], row['verwendungszweck_3'],
-                    row['verwendungszweck_4'], row['verwendungszweck_5'], row['waehrung'],
-                    row['geschaeftsart'], row['zuordnungsstatus'], row['extra_t'], row['extra_u'],
-                    row['extra_v'], row['extra_w'], row['extra_x'], row['extra_y'], row['extra_z'],
-                    row['extra_aa'], row['extra_ab'], row['extra_ac'], row['extra_ad'], row['extra_ae'],
-                    row['extra_af'], row['extra_ag'], row['extra_ah']
-                )
-                
-                cur.execute(query, valori)
-                if cur.rowcount > 0:
-                    inseriti += 1
-                else:
-                    duplicati += 1
-            
-            
-            
             conn.commit()
             cur.close()
             conn.close()
-            
+
             st.success(f"Caricamento completato! Record inseriti: {inseriti}, duplicati saltati: {duplicati}.")
-            
-        
-        
+
         except Exception as e:
-            st.error(f"Errore durante la connessione o l'inserimento nel database: {e}")       
-
-
-
-
-### 
-
-
-
-
+            st.error(f"Errore durante la connessione o l'inserimento nel database: {e}")
