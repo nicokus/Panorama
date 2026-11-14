@@ -1,4 +1,10 @@
+import psycopg2
+
+DATABASE_URL = "postgresql://postgres:foLkCkJTsFCZTqavpMefCAMCBsjgYjkO@switchyard.proxy.rlwy.net:28916/railway"
+
+### LISTA DI TUTTI I VALORI POSSIBILI ###
 COLONNE_CONFIG = [
+    # Valori del CSV in upload
     {"indice": 1, "nome": "bic_auftraggeber", "tipo": "TEXT"},
     {"indice": 2, "nome": "iban_auftraggeber", "tipo": "TEXT"},
     {"indice": 3, "nome": "reserviert_c", "tipo": "TEXT"},
@@ -33,10 +39,49 @@ COLONNE_CONFIG = [
     {"indice": 32, "nome": "extra_af", "tipo": "TEXT"},
     {"indice": 33, "nome": "extra_ag", "tipo": "TEXT"},
     {"indice": 34, "nome": "extra_ah", "tipo": "TEXT"},
+
+    # Valori per definire le righe    
     {"indice": 35, "nome": "id_riga", "tipo": "INTEGER"},
-    {"indice": 36, "nome": "unique_ID", "tipo": "TEXT"},
+    {"indice": 36, "nome": "unique_id", "tipo": "TEXT"},
     {"indice": 37, "nome": "dateiname", "tipo": "TEXT"},
-    {"indice": 38, "nome": "import_zeitstempel", "tipo": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"},
+    {"indice": 38, "nome": "import_zeitstempel", "tipo": "TIMESTAMP", "default": "CURRENT_TIMESTAMP"},
     {"indice": 39, "nome": "lade_strategie", "tipo": "TEXT"},
     {"indice": 40, "nome": "bearbeitungs_status", "tipo": "TEXT"}
 ]
+
+colonne_definitions = [f"    {col['nome']} {col['tipo']}" for col in COLONNE_CONFIG]
+colonne_sql = ",\n".join(colonne_definitions)
+
+create_table_query = f"""
+CREATE TABLE IF NOT EXISTS bank_transaktionen (
+{colonne_sql} 
+);"""
+
+create_index_query = "CREATE INDEX IF NOT EXISTS idx_unique_id ON bank_transaktionen(unique_id);"
+
+# Generazione dinamica della query di INSERT
+nomi_colonne = [col["nome"] for col in COLONNE_CONFIG]
+colonne_insert_sql = ", ".join(nomi_colonne)
+placeholders_sql = ", ".join(["%s"] * len(COLONNE_CONFIG))
+
+insert_query = f"""
+INSERT INTO bank_transaktionen ({colonne_insert_sql})
+VALUES ({placeholders_sql})
+ON CONFLICT (unique_id) DO NOTHING;
+"""
+
+try:
+    conn = psycopg2.connect(DATABASE_URL)
+    cur = conn.cursor()
+    cur.execute(create_table_query)
+    conn.commit()
+    cur.execute(create_index_query)
+    conn.commit()
+    cur.close()
+    conn.close()
+    print("Table 'bank_transaktionen' was created with success on Railway")
+except Exception as e:
+    print(f"error: could not create table: {e}")
+
+
+
