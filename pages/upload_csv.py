@@ -3,6 +3,9 @@ import pandas as pd
 import hashlib
 import psycopg2
 import os
+import sys
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from database import COLONNE_CONFIG
 
 
@@ -21,7 +24,7 @@ uploaded_file = st.file_uploader(
     )
 
 
-colonne_csv = [col['nome'] for col in COLONNE_CONFIG[1:]]
+colonne_csv = [col['nome'] for col in COLONNE_CONFIG]
 
 ### TABELLA PER VEDERE ANTEPRIMA DEL CSV ###
 if uploaded_file is not None:
@@ -50,7 +53,7 @@ if uploaded_file is not None:
 
 
             
-            ### CALCOLO HASH DETERMINISTICO (codice_univoco)
+            ### CALCOLO HASH DETERMINISTICO (unique_id)
             def calcola_hash(row):
                 campi_stabili = "".join([
                     str(row.get('buchungstag', '')),
@@ -62,7 +65,7 @@ if uploaded_file is not None:
                 ])
                 return hashlib.sha256(campi_stabili.encode('utf-8')).hexdigest()
             
-            df['codice_univoco'] = df.apply(calcola_hash, axis=1)
+            df['unique_id'] = df.apply(calcola_hash, axis=1)
             
             nomi_colonne = [col["nome"] for col in COLONNE_CONFIG]
             colonne_insert_sql = ", ".join(nomi_colonne)
